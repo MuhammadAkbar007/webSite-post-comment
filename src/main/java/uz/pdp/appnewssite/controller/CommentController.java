@@ -8,6 +8,7 @@ import uz.pdp.appnewssite.payload.ApiResponse;
 import uz.pdp.appnewssite.payload.CommentDto;
 import uz.pdp.appnewssite.service.CommentService;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 @RestController
@@ -31,8 +32,8 @@ public class CommentController {
 
     @PreAuthorize("hasAuthority('EDIT_COMMENT')")
     @PutMapping("/{id}")
-    public ResponseEntity<?> edit(@Valid @RequestBody CommentDto dto, @PathVariable Long id) {
-        ApiResponse response = service.edit(id, dto);
+    public ResponseEntity<?> edit(@Valid @RequestBody CommentDto dto, @PathVariable Long id, HttpServletRequest request) {
+        ApiResponse response = service.edit(id, dto, request);
         return ResponseEntity.status(response.isSuccess() ? 202 : 404).body(response.getMessage());
     }
 
@@ -44,8 +45,8 @@ public class CommentController {
     }
 
     @PreAuthorize("hasAuthority('DELETE_MY_COMMENT')")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        ApiResponse response = service.delete(id);
+    public ResponseEntity<?> deleteUser(@PathVariable Long id, HttpServletRequest request) {
+        ApiResponse response = service.deleteMyComment(id, request);
         return ResponseEntity.status(response.isSuccess() ? 204 : 409).body(response.getMessage());
     }
 }
