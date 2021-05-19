@@ -45,8 +45,8 @@ public class CommentController {
     }
 
     @PreAuthorize("hasAuthority('DELETE_MY_COMMENT')")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id, HttpServletRequest request) {
-        ApiResponse response = service.deleteMyComment(id, request);
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        ApiResponse response = service.deleteMyComment(id);
         return ResponseEntity.status(response.isSuccess() ? 204 : 409).body(response.getMessage());
     }
 }

@@ -1,6 +1,7 @@
 package uz.pdp.appnewssite.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import uz.pdp.appnewssite.entity.Comment;
 import uz.pdp.appnewssite.entity.Post;
@@ -10,7 +11,6 @@ import uz.pdp.appnewssite.payload.CommentDto;
 import uz.pdp.appnewssite.repository.CommentRepository;
 import uz.pdp.appnewssite.repository.PostRepository;
 import uz.pdp.appnewssite.repository.UserRepository;
-import uz.pdp.appnewssite.security.JwtProvider;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -22,8 +22,6 @@ public class CommentService {
     CommentRepository repository;
     @Autowired
     PostRepository postRepository;
-    @Autowired
-    JwtProvider jwtProvider;
     @Autowired
     UserRepository userRepository;
 
@@ -47,12 +45,8 @@ public class CommentService {
         if (!optionalComment.isPresent()) return new ApiResponse("Comment not found !", false);
         Comment comment = optionalComment.get();
         User createdUser = comment.getCreatedBy();
-        String token = request.getHeader("Authorization");
-        token = token.substring(7);
-        String username = jwtProvider.getUsernameFromToken(token);
-        Optional<User> optionalUser = userRepository.findByUsername(username);
-        if (!optionalUser.isPresent()) return new ApiResponse("User not found !", false);
-        if (createdUser != optionalUser.get()) return new ApiResponse("This is not your comment !", false);
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (createdUser != user) return new ApiResponse("This is not your comment !", false);
         comment.setText(dto.getText());
         repository.save(comment);
         return new ApiResponse("Comment successfully edited !", true);
@@ -67,18 +61,14 @@ public class CommentService {
         }
     }
 
-    public ApiResponse deleteMyComment(Long id, HttpServletRequest request) {
+    public ApiResponse deleteMyComment(Long id) {
         try {
             Optional<Comment> optionalComment = repository.findById(id);
             if (!optionalComment.isPresent()) return new ApiResponse("Comment not found !", false);
             Comment comment = optionalComment.get();
             User createdUser = comment.getCreatedBy();
-            String token = request.getHeader("Authorization");
-            token = token.substring(7);
-            String username = jwtProvider.getUsernameFromToken(token);
-            Optional<User> optionalUser = userRepository.findByUsername(username);
-            if (!optionalUser.isPresent()) return new ApiResponse("User not found !", false);
-            if (createdUser != optionalUser.get()) return new ApiResponse("This is not your comment !", false);
+            User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (createdUser != user) return new ApiResponse("This is not your comment !", false);
             repository.deleteById(id);
             return new ApiResponse("Comment successfully deleted !", true);
         } catch (Exception e) {
